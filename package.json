@@ -1,10 +1,9 @@
 {
-  "name": "2-end",
+  "name": "mybuilderbook",
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "dev": "next",
-    "dev-express": "nodemon server/server.js --watch server",
+    "dev": "nodemon server/server.js --watch server",
     "build": "next build",
     "start": "next start",
     "lint": "eslint '**/*.js' '**/*.jsx'"
@@ -20,8 +19,12 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
+    "lodash": "^4.17.21",
     "mongoose": "^5.10.0",
     "next": "^12.1.6",
+    "nprogress": "^0.2.0",
+    "passport": "^0.6.0",
+    "passport-google-oauth": "^2.0.0",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
