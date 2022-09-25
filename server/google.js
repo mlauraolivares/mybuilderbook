@@ -66,7 +66,7 @@ function setupGoogle({ server, ROOT_URL }) {
     passport.authenticate('google', {
       failureRedirect: '/login',
     }),
-    (_, res) => {
+    (req, res) => {
       res.redirect('/');
     },
   );

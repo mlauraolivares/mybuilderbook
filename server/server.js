@@ -5,7 +5,7 @@ const next = require('next');
 const mongoose = require('mongoose');
 
 const setupGoogle = require('./google');
-const User = require('./models/User');
+const { insertTemplates } = require('./models/EmailTemplate');
 
 require('dotenv').config();
 
@@ -18,7 +18,6 @@ const options = {
   useFindAndModify: false,
   useUnifiedTopology: true,
 };
-
 mongoose.connect(MONGO_URL, options);
 
 const port = process.env.PORT || 8000;
@@ -27,11 +26,9 @@ const ROOT_URL = `http://localhost:${port}`;
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-// Nextjs's server prepared
-app.prepare().then(() => {
+app.prepare().then(async () => {
   const server = express();
 
-  // confuring MongoDB session store
   const MongoStore = mongoSessionStore(session);
   const sess = {
     name: process.env.SESSION_NAME,
@@ -51,11 +48,7 @@ app.prepare().then(() => {
 
   server.use(session(sess));
 
-  // server.get('/', async (req, res) => {
-  //   const user = await User.findOne({ slug: 'team-builder-book' });
-  //   req.user = user;
-  //   app.render(req, res, '/');
-  // });
+  await insertTemplates();
 
   setupGoogle({ server, ROOT_URL });
 
@@ -64,6 +57,6 @@ app.prepare().then(() => {
   // starting express server
   server.listen(port, (err) => {
     if (err) throw err;
-    console.log(`> Ready on ${ROOT_URL}`); // eslint-disable-line no-console
+    console.log(`> Ready on ${ROOT_URL}`);
   });
 });
