@@ -5,8 +5,11 @@ const next = require('next');
 const mongoose = require('mongoose');
 
 const setupGoogle = require('./google');
+const { setupGithub } = require('./github');
 const api = require('./api');
+
 const { insertTemplates } = require('./models/EmailTemplate');
+const routesWithSlug = require('./routesWithSlug');
 
 require('dotenv').config();
 
@@ -35,6 +38,8 @@ const handle = app.getRequestHandler();
 app.prepare().then(async () => {
   const server = express();
 
+  server.use(express.json());
+
   const MongoStore = mongoSessionStore(session);
   const sess = {
     name: process.env.SESSION_NAME,
@@ -57,12 +62,9 @@ app.prepare().then(async () => {
   await insertTemplates();
 
   setupGoogle({ server, ROOT_URL });
+  setupGithub({ server, ROOT_URL });
   api(server);
-
-  server.get('/books/:bookSlug/:chapterSlug', (req, res) => {
-    const { bookSlug, chapterSlug } = req.params;
-    app.render(req, res, '/public/read-chapter', { bookSlug, chapterSlug });
-  });
+  routesWithSlug({ server, app });
 
   server.get('*', (req, res) => {
     const url = URL_MAP[req.path];
