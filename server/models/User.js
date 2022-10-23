@@ -46,14 +46,6 @@ const mongoSchema = new Schema({
   githubAccessToken: {
     type: String,
   },
-  githubId: {
-    type: String,
-    unique: true,
-  },
-  githubUsername: {
-    type: String,
-    unique: true,
-  },
 });
 
 class UserClass {
