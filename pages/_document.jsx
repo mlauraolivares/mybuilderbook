@@ -12,72 +12,21 @@ const propTypes = {
   ).isRequired,
 };
 
-class MyDocument extends Document {
-  static getInitialProps = async (ctx) => {
-    // Render app and page and get the context of the page with collected side effects.
-    const originalRenderPage = ctx.renderPage;
+function MyDocument({ styles }) {
+  return (
+    <Html lang="en" style={{ height: '100%' }}>
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="google" content="notranslate" />
+        <meta name="theme-color" content="#1976D2" />
 
-    // You can consider sharing the same emotion cache between all the SSR requests to speed up performance.
-    // However, be aware that it can have global side effects.
-    const cache = createCache({
-      key: 'css',
-      prepend: true,
-    });
-    const { extractCriticalToChunks } = createEmotionServer(cache);
+        <link rel="shortcut icon" href="https://storage.googleapis.com/builderbook/favicon32.png" />
 
-    ctx.renderPage = () =>
-      originalRenderPage({
-        // eslint-disable-next-line react/display-name
-        enhanceApp: (App) => (props) => <App emotionCache={cache} {...props} />,
-      });
+        <link rel="stylesheet" href="/fonts/server.css" />
+        <link rel="stylesheet" href="https://storage.googleapis.com/builderbook/vs.min.css" />
 
-    const initialProps = await Document.getInitialProps(ctx);
-    // This is important. It prevents emotion to render invalid HTML.
-    // See https://github.com/mui-org/material-ui/issues/26561#issuecomment-855286153
-    const chunks = extractCriticalToChunks(initialProps.html);
-
-    const emotionStyleTags = chunks.styles.map((style) => (
-      <style
-        data-emotion={`${style.key} ${style.ids.join(' ')}`}
-        key={style.key}
-        // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: style.css }}
-      />
-    ));
-
-    return {
-      ...initialProps,
-      // Styles fragment is rendered after the app and page rendering finish.
-      styles: [...React.Children.toArray(initialProps.styles), ...emotionStyleTags],
-    };
-  };
-
-  render() {
-    return (
-      <Html lang="en" style={{ height: '100%' }}>
-        <Head>
-          <meta charSet="utf-8" />
-          <meta name="google" content="notranslate" />
-          <meta name="theme-color" content="#1976D2" />
-
-          <link
-            rel="shortcut icon"
-            href="https://storage.googleapis.com/builderbook/favicon32.png"
-          />
-
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css?family=Roboto:300,400:latin"
-          />
-          <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-          <link
-            rel="stylesheet"
-            href="https://storage.googleapis.com/builderbook/nprogress.min.css"
-          />
-          <link rel="stylesheet" href="https://storage.googleapis.com/builderbook/vs.min.css" />
-
-          <style>
-            {`
+        <style>
+          {`
               a {
                 font-weight: 400;
                 color: #58a6ff;
@@ -103,17 +52,71 @@ class MyDocument extends Document {
                 background: #FFF;
               }
             `}
-          </style>
-          {this.props.styles}
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </Html>
-    );
-  }
+        </style>
+        <script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}', {
+                page_path: window.location.pathname,
+              });
+            `,
+          }}
+        />
+        {/* Inject styles first to match with the prepend: true configuration. */}
+        {styles}
+      </Head>
+      <body>
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  );
 }
+
+MyDocument.getInitialProps = async (ctx) => {
+  // Render app and page and get the context of the page with collected side effects.
+  const originalRenderPage = ctx.renderPage;
+
+  // You can consider sharing the same emotion cache between all the SSR requests to speed up performance.
+  // However, be aware that it can have global side effects.
+  const cache = createCache({
+    key: 'css',
+    prepend: true,
+  });
+  const { extractCriticalToChunks } = createEmotionServer(cache);
+
+  ctx.renderPage = () =>
+    originalRenderPage({
+      // eslint-disable-next-line react/display-name
+      enhanceApp: (App) => (props) => <App emotionCache={cache} {...props} />,
+    });
+
+  const initialProps = await Document.getInitialProps(ctx);
+  // This is important. It prevents emotion to render invalid HTML.
+  // See https://github.com/mui-org/material-ui/issues/26561#issuecomment-855286153
+  const chunks = extractCriticalToChunks(initialProps.html);
+
+  const emotionStyleTags = chunks.styles.map((style) => (
+    <style
+      data-emotion={`${style.key} ${style.ids.join(' ')}`}
+      key={style.key}
+      dangerouslySetInnerHTML={{ __html: style.css }}
+    />
+  ));
+
+  return {
+    ...initialProps,
+    // Styles fragment is rendered after the app and page rendering finish.
+    styles: [...React.Children.toArray(initialProps.styles), ...emotionStyleTags],
+  };
+};
 
 MyDocument.propTypes = propTypes;
 
